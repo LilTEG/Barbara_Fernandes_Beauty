@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bárbara Fernandes Beauty - Agendamentos</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .titulo-elegante { font-family: 'Playfair Display', serif; }
+    .card-selecionado {
+      border-color: #C2957E !important;
+      background-color: #FAF6F0 !important;
+      box-shadow: 0 10px 25px -5px rgba(194, 149, 126, 0.25);
+    }
+    .card-selecionado .btn-txt-selecionar {
+      background-color: #4A3B32;
+      color: #ffffff;
+    }
+    .slot-selecionado {
+      background-color: #4A3B32 !important;
+      color: #ffffff !important;
+      border-color: #4A3B32 !important;
+      box-shadow: 0 4px 12px rgba(74, 59, 50, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-tr from-[#FAF6F0] via-[#F4EAE1] to-[#EAD5C3] min-h-screen p-4 md:p-8 flex items-start justify-center">
+
+  <div class="bg-white/95 backdrop-blur-md p-6 md:p-10 rounded-3xl shadow-xl w-full max-w-4xl border border-[#EAD5C3]/40 my-4">
+    
+    <!-- Cabeçalho -->
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-6 border-b border-slate-100">
+      <div>
+        <h1 class="titulo-elegante text-2xl md:text-3xl font-bold text-[#4A3B32]">Bárbara Fernandes</h1>
+        <p class="titulo-elegante text-[10px] uppercase tracking-[0.2em] text-[#C2957E] font-medium">Beauty &amp; Makeup</p>
+      </div>
+      
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-abrir-admin" type="button" class="hidden cursor-pointer text-xs font-bold text-white bg-[#C2957E] hover:bg-[#B0826B] px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+          <span>⚙️</span>
+          <span>Painel ADM</span>
+        </button>
+
+        <button id="btn-alternar-agendamentos" type="button" class="cursor-pointer text-xs font-semibold text-[#4A3B32] bg-[#FAF6F0] hover:bg-[#EAD5C3]/50 border border-[#EAD5C3] px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+          <span>🗓️</span>
+          <span id="txt-btn-agendamentos">Meus Agendamentos</span>
+          <span id="badge-qtd-agendamentos" class="hidden bg-[#C2957E] text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+        </button>
+
+        <button id="btn-sair" type="button" class="cursor-pointer text-xs font-semibold text-slate-500 hover:text-red-600 transition bg-slate-100 hover:bg-red-50 px-3.5 py-2 rounded-xl">
+          Sair
+        </button>
+      </div>
+    </div>
+
+    <!-- Boas-vindas -->
+    <div class="my-6 flex justify-between items-center">
+      <div>
+        <h2 id="msg-boas-vindas" class="text-lg font-semibold text-[#4A3B32]">Carregando seu perfil...</h2>
+        <p id="sub-boas-vindas" class="text-xs text-slate-500 mt-0.5">Selecione os procedimentos desejados para visualizar os horários vagos</p>
+      </div>
+      <span id="tag-sou-admin" class="hidden text-[10px] font-bold uppercase tracking-widest bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1 rounded-full">Administradora</span>
+    </div>
+
+    <!-- Alerta de Feedback Geral -->
+    <div id="feedback-geral" class="hidden mb-6 p-4 rounded-2xl text-xs font-semibold text-center border"></div>
+
+    <!-- Alerta: Telefone Ausente (Bloqueia agendamento se não preencher) -->
+    <div id="card-telefone-pendente" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+      <div class="flex items-start gap-3">
+        <span class="text-amber-600 text-xl">📱</span>
+        <div class="flex-1">
+          <h3 class="text-xs font-bold text-amber-900 uppercase tracking-wider">WhatsApp Obrigatório para Agendamento</h3>
+          <p class="text-xs text-amber-700 mt-1 leading-relaxed">
+            Informe seu número com DDD para liberar o agendamento e receber sua confirmação via WhatsApp.
+          </p>
+          <div class="mt-3 flex gap-2">
+            <input type="tel" id="input-completar-tel" maxlength="15" placeholder="(11) 99999-9999"
+              class="w-full px-3 py-2 text-xs border border-amber-300 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none bg-white">
+            <button id="btn-salvar-tel" type="button" class="bg-[#4A3B32] hover:bg-[#382C25] text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap cursor-pointer">
+              Salvar
+            </button>
+          </div>
+          <p id="msg-erro-tel" class="hidden text-[11px] text-red-600 mt-1.5 font-medium"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TELA 1: NOVO AGENDAMENTO                                          -->
+    <!-- ================================================================= -->
+    <div id="view-novo-agendamento" class="space-y-6">
+      
+      <div id="container-sessoes-servicos" class="space-y-4">
+        <div class="text-center py-8 text-xs text-slate-400">Carregando catálogo de serviços...</div>
+      </div>
+
+      <div id="painel-detalhes-escolha" class="hidden space-y-6 pt-6 border-t border-slate-200">
+        
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider text-[#C2957E] mb-2">Procedimentos Selecionados</p>
+          <div id="lista-itens-selecionados" class="space-y-2"></div>
+        </div>
+
+        <div id="container-adicional-cilios" class="hidden items-center justify-between p-4 bg-white rounded-2xl border-2 border-dashed border-[#C2957E]/50 hover:border-[#C2957E] transition cursor-pointer">
+          <label for="chk-cilios" class="flex items-center gap-3 cursor-pointer flex-1">
+            <input type="checkbox" id="chk-cilios" class="w-5 h-5 accent-[#C2957E] rounded cursor-pointer">
+            <div>
+              <span class="text-xs font-bold text-[#4A3B32] block">👁️ Adicionar Cílios Postiços na Maquiagem (+ R$ 10,00)</span>
+              <span class="text-[11px] text-slate-500">Realce ainda mais o olhar (adiciona +10 min ao atendimento)</span>
+            </div>
+          </label>
+        </div>
+
+        <div id="container-cilios-inclusos" class="hidden p-3.5 bg-emerald-50/80 text-emerald-800 rounded-2xl border border-emerald-200 text-xs font-semibold flex items-center gap-2">
+          <span>✨</span>
+          <span>Cílios postiços já estão inclusos gratuitamente na sua Maquiagem!</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1.5">1. Escolha a Data</label>
+          <input type="date" id="input-data" class="w-full md:w-1/2 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none bg-white text-sm">
+        </div>
+
+        <div id="secao-horarios" class="space-y-2">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32]">
+            2. Horários Disponíveis <span id="label-tempo-necessario" class="text-[#C2957E] font-bold text-[11px] lowercase"></span>
+          </label>
+          <p id="msg-aviso-horarios" class="text-xs text-slate-400 italic">Selecione uma data acima para carregar a disponibilidade.</p>
+          <div id="grade-horarios" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 pt-1"></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1.5">Observações (Opcional)</label>
+          <textarea id="input-observacoes" rows="2" placeholder="Alguma preferência ou detalhe importante?"
+            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none bg-white text-sm"></textarea>
+        </div>
+
+        <!-- Resumo Financeiro com Sinal de 30% -->
+        <div class="bg-[#4A3B32] text-white rounded-2xl p-5 space-y-3 shadow-lg">
+          <div class="flex justify-between items-center border-b border-white/10 pb-3">
+            <div>
+              <p class="text-[10px] uppercase tracking-wider text-[#EAD5C3]">Duração Total</p>
+              <p id="resumo-tempo" class="text-sm font-bold mt-0.5">-</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] uppercase tracking-wider text-[#EAD5C3]">Valor Total dos Serviços</p>
+              <p id="resumo-valor" class="text-xl font-bold text-white">-</p>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center bg-white/10 p-3 rounded-xl">
+            <div>
+              <p class="text-xs font-bold text-[#EAD5C3]">💳 Sinal de Reserva (<span id="lbl-perc-sinal">30</span>% no ato)</p>
+              <p class="text-[10px] text-slate-300">Para garantir a reserva do seu horário (não reembolsável em caso de desistência)</p>
+            </div>
+            <p id="resumo-sinal" class="text-lg font-bold text-[#EAD5C3]">-</p>
+          </div>
+        </div>
+
+        <button id="btn-confirmar-agendamento" type="button" class="w-full bg-[#C2957E] hover:bg-[#B0826B] text-white font-bold py-3.5 rounded-xl transition shadow-md shadow-[#C2957E]/20 text-sm cursor-pointer">
+          Confirmar e Garantir Horário ✨
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TELA 2: MEUS AGENDAMENTOS                                         -->
+    <!-- ================================================================= -->
+    <div id="view-meus-agendamentos" class="hidden space-y-6">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[#4A3B32]">Meus Agendamentos</h3>
+          <p class="text-xs text-slate-500">Acompanhe seus horários ou envie o comprovante do sinal via WhatsApp</p>
+        </div>
+        <button id="btn-voltar-agendar" type="button" class="cursor-pointer text-xs font-bold text-[#C2957E] hover:underline">
+          + Novo Agendamento
+        </button>
+      </div>
+
+      <!-- Box de Pagamento Pix / Confirmação Recente -->
+      <div id="card-pix-pos-agendamento" class="hidden bg-emerald-50 border border-emerald-200 p-5 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <h4 class="text-sm font-bold text-emerald-900">🎉 Horário Pré-Reservado! Falta apenas o Sinal de 30%</h4>
+          <button type="button" onclick="document.getElementById('card-pix-pos-agendamento').classList.add('hidden')" class="text-xs text-emerald-700 font-bold font-sans">✕</button>
+        </div>
+        <p class="text-xs text-emerald-800 leading-relaxed">
+          Para confirmar definitivamente seu horário, realize o Pix do sinal de <strong id="pix-valor-sinal">R$ 0,00</strong> na chave abaixo e envie o comprovante no nosso WhatsApp:
+        </p>
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-3 rounded-xl border border-emerald-200">
+          <div class="text-xs">
+            <span class="text-slate-400 font-semibold">Chave Pix:</span>
+            <strong id="pix-chave-texto" class="text-[#4A3B32] ml-1 select-all">-</strong>
+          </div>
+          <button type="button" id="btn-copiar-pix" class="text-[11px] bg-[#FAF6F0] hover:bg-[#EAD5C3]/40 text-[#4A3B32] font-bold px-3 py-1.5 rounded-lg border border-[#EAD5C3] cursor-pointer">
+            📋 Copiar Chave Pix
+          </button>
+        </div>
+        <a id="btn-wpp-confirmacao" href="#" target="_blank" class="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl transition shadow-sm">
+          📲 Enviar Pedido e Comprovante no WhatsApp da Bárbara
+        </a>
+      </div>
+
+      <div id="lista-agendamentos" class="space-y-3">
+        <p class="text-xs text-slate-500 text-center py-8">Carregando seus agendamentos...</p>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TELA 3: PAINEL ADMINISTRATIVO (BLOQUEIOS E AGENDA GERAL)          -->
+    <!-- ================================================================= -->
+    <div id="view-admin" class="hidden space-y-8">
+      
+      <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+        <div>
+          <h3 class="titulo-elegante text-xl font-bold text-[#4A3B32]">⚙️ Central Administrativa</h3>
+          <p class="text-xs text-slate-500">Configure seu horário de funcionamento, bloqueios e gerencie clientes</p>
+        </div>
+        <button id="btn-fechar-admin" type="button" class="cursor-pointer text-xs font-bold text-[#C2957E] hover:underline">
+          ← Voltar ao Catálogo
+        </button>
+      </div>
+
+      <!-- Configuração de Expediente, Pix e WhatsApp -->
+      <div class="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <h4 class="text-sm font-bold text-[#4A3B32] uppercase tracking-wider flex items-center gap-2">
+          <span>⏰</span> Horário de Funcionamento e Recebimento (Sinal 30%)
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Abertura (Hora)</label>
+            <select id="adm-cfg-abertura" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Fechamento (Hora)</label>
+            <select id="adm-cfg-fechamento" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">WhatsApp do Salão (com 55)</label>
+            <input type="text" id="adm-cfg-wpp" placeholder="5511999999999" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sua Chave Pix (Sinal 30%)</label>
+            <input type="text" id="adm-cfg-pix" placeholder="CNPJ, Celular ou E-mail" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+        </div>
+        <button id="btn-salvar-config" type="button" class="bg-[#C2957E] hover:bg-[#B0826B] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition cursor-pointer">
+          Salvar Configurações de Expediente
+        </button>
+      </div>
+
+      <!-- Bloquear Data ou Horário -->
+      <div class="bg-[#FAF6F0] p-5 md:p-6 rounded-3xl border border-[#EAD5C3] space-y-4">
+        <h4 class="text-sm font-bold text-[#4A3B32] uppercase tracking-wider flex items-center gap-2">
+          <span>🔒</span> Bloquear Data ou Horário Específico
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-[#4A3B32] mb-1">Data do Bloqueio</label>
+            <input type="date" id="adm-data-bloqueio" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#4A3B32] mb-1">Motivo (Opcional)</label>
+            <input type="text" id="adm-motivo-bloqueio" placeholder="Ex: Folga, Consulta médica, Curso..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 pt-1">
+          <input type="checkbox" id="adm-chk-dia-inteiro" class="w-4 h-4 accent-[#4A3B32] rounded cursor-pointer">
+          <label for="adm-chk-dia-inteiro" class="text-xs font-bold text-[#4A3B32] cursor-pointer">
+            Fechar a agenda o DIA INTEIRO nesta data
+          </label>
+        </div>
+
+        <div id="adm-container-horas" class="grid grid-cols-2 gap-4 pt-1">
+          <div>
+            <label class="block text-xs font-semibold text-[#4A3B32] mb-1">Hora de Início</label>
+            <input type="time" id="adm-hora-inicio" value="08:00" step="1800" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#4A3B32] mb-1">Hora de Fim</label>
+            <input type="time" id="adm-hora-fim" value="12:00" step="1800" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+        </div>
+
+        <button id="btn-salvar-bloqueio" type="button" class="bg-[#4A3B32] hover:bg-[#382C25] text-white text-xs font-bold px-6 py-3 rounded-xl transition cursor-pointer">
+          Confirmar Bloqueio na Agenda
+        </button>
+      </div>
+
+      <!-- Lista de Bloqueios Ativos -->
+      <div class="space-y-3">
+        <h4 class="text-sm font-bold text-[#4A3B32] uppercase tracking-wider">Bloqueios Ativos</h4>
+        <div id="adm-lista-bloqueios" class="space-y-2.5"></div>
+      </div>
+
+      <!-- Lista de Todos os Agendamentos (Controle Financeiro) -->
+      <div class="space-y-3 pt-4 border-t border-slate-200">
+        <h4 class="text-sm font-bold text-[#4A3B32] uppercase tracking-wider">📅 Todos os Agendamentos de Clientes</h4>
+        <div id="adm-lista-todos-agendamentos" class="space-y-3"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Modal de Cancelamento Cliente -->
+  <div id="modal-cancelamento-cliente" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-[#EAD5C3] space-y-5">
+      <div class="flex items-center gap-3 text-red-600">
+        <span class="text-2xl">⚠️</span>
+        <h3 class="titulo-elegante text-xl font-bold text-[#4A3B32]">Cancelar Agendamento?</h3>
+      </div>
+
+      <p id="modal-resumo-cancelar" class="text-xs font-bold text-[#4A3B32] bg-[#FAF6F0] p-3 rounded-xl border border-[#EAD5C3]/50"></p>
+
+      <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-xs text-amber-900 space-y-1 leading-relaxed">
+        <p class="font-bold uppercase tracking-wider text-[11px] text-amber-800 font-sans">Política de Cancelamento e Taxa de Reserva</p>
+        <p>
+          Ao confirmar o cancelamento deste horário, informamos que <strong>a taxa de reserva de 30% cobrada no processo de agendamento não será reembolsada</strong>, pois destina-se a cobrir a reserva exclusiva de agenda.
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1.5">Motivo do Cancelamento (Opcional)</label>
+        <textarea id="input-motivo-cancelamento" rows="2" placeholder="Conte-nos brevemente o motivo..."
+          class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#C2957E] focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" id="btn-fechar-modal-cancelar" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+          Manter meu Horário
+        </button>
+        <button type="button" id="btn-confirmar-cancelamento-cliente" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition cursor-pointer">
+          Estou ciente, Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =====================================================================
+    // 1. CONFIGURAÇÃO DO SUPABASE
+    // =====================================================================
+    const SUPABASE_URL = 'https://fpcfdaptizetnpedipdh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwY2ZkYXB0aXpldG5wZWRpcGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyMTE1NDAsImV4cCI6MjExMDc4NzU0MH0.gC-6U45nyBM4Xz8AIP6ESdJkYMUrYYxApEBL5i-H23U';
+    
+    const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) 
+      ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+      : null;
+
+    let usuarioAtual = null;
+    let nomeClienteLogado = 'Cliente';
+    let telefoneClienteLogado = '';
+    let isUsuarioAdmin = false;
+    let listaServicos = [];
+    let selecoesPorCategoria = {};
+    let horarioSelecionado = null;
+    let agendamentoParaCancelar = null;
+
+    // Configurações dinâmicas
+    let horaAbertura = 8;
+    let horaFechamento = 20;
+    let percentualSinal = 30;
+    let whatsappSalao = '5511999999999';
+    let chavePixSalao = 'barbara@beauty.com';
+    const INTERVALO_MINUTOS = 30;
+
+    // Elementos da Interface
+    const msgBoasVindas = document.getElementById('msg-boas-vindas');
+    const tagSouAdmin = document.getElementById('tag-sou-admin');
+    const cardTelefonePendente = document.getElementById('card-telefone-pendente');
+    const inputCompletarTel = document.getElementById('input-completar-tel');
+    const btnSalvarTel = document.getElementById('btn-salvar-tel');
+    const msgErroTel = document.getElementById('msg-erro-tel');
+    const btnSair = document.getElementById('btn-sair');
+    const feedbackGeral = document.getElementById('feedback-geral');
+
+    // Navegação
+    const btnAbrirAdmin = document.getElementById('btn-abrir-admin');
+    const btnFecharAdmin = document.getElementById('btn-fechar-admin');
+    const btnAlternarAgendamentos = document.getElementById('btn-alternar-agendamentos');
+    const txtBtnAgendamentos = document.getElementById('txt-btn-agendamentos');
+    const badgeQtdAgendamentos = document.getElementById('badge-qtd-agendamentos');
+    const btnVoltarAgendar = document.getElementById('btn-voltar-agendar');
+
+    const viewNovoAgendamento = document.getElementById('view-novo-agendamento');
+    const viewMeusAgendamentos = document.getElementById('view-meus-agendamentos');
+    const viewAdmin = document.getElementById('view-admin');
+
+    // Catálogo e Agendamento
+    const containerSessoesServicos = document.getElementById('container-sessoes-servicos');
+    const painelDetalhesEscolha = document.getElementById('painel-detalhes-escolha');
+    const listaItensSelecionados = document.getElementById('lista-itens-selecionados');
+    const containerAdicionalCilios = document.getElementById('container-adicional-cilios');
+    const containerCiliosInclusos = document.getElementById('container-cilios-inclusos');
+    const chkCilios = document.getElementById('chk-cilios');
+    const inputData = document.getElementById('input-data');
+    const gradeHorarios = document.getElementById('grade-horarios');
+    const msgAvisoHorarios = document.getElementById('msg-aviso-horarios');
+    const labelTempoNecessario = document.getElementById('label-tempo-necessario');
+    const inputObservacoes = document.getElementById('input-observacoes');
+    const resumoTempo = document.getElementById('resumo-tempo');
+    const resumoValor = document.getElementById('resumo-valor');
+    const resumoSinal = document.getElementById('resumo-sinal');
+    const lblPercSinal = document.getElementById('lbl-perc-sinal');
+    const btnConfirmarAgendamento = document.getElementById('btn-confirmar-agendamento');
+    const listaAgendamentosContainer = document.getElementById('lista-agendamentos');
+
+    // Box Pix Pós-Agendamento
+    const cardPixPosAgendamento = document.getElementById('card-pix-pos-agendamento');
+    const pixValorSinal = document.getElementById('pix-valor-sinal');
+    const pixChaveTexto = document.getElementById('pix-chave-texto');
+    const btnCopiarPix = document.getElementById('btn-copiar-pix');
+    const btnWppConfirmacao = document.getElementById('btn-wpp-confirmacao');
+
+    // Modal Cancelamento
+    const modalCancelamentoCliente = document.getElementById('modal-cancelamento-cliente');
+    const modalResumoCancelar = document.getElementById('modal-resumo-cancelar');
+    const inputMotivoCancelamento = document.getElementById('input-motivo-cancelamento');
+    const btnFecharModalCancelar = document.getElementById('btn-fechar-modal-cancelar');
+    const btnConfirmarCancelamentoCliente = document.getElementById('btn-confirmar-cancelamento-cliente');
+
+    // Elementos ADM
+    const admCfgAbertura = document.getElementById('adm-cfg-abertura');
+    const admCfgFechamento = document.getElementById('adm-cfg-fechamento');
+    const admCfgWpp = document.getElementById('adm-cfg-wpp');
+    const admCfgPix = document.getElementById('adm-cfg-pix');
+    const btnSalvarConfig = document.getElementById('btn-salvar-config');
+    const admDataBloqueio = document.getElementById('adm-data-bloqueio');
+    const admMotivoBloqueio = document.getElementById('adm-motivo-bloqueio');
+    const admChkDiaInteiro = document.getElementById('adm-chk-dia-inteiro');
+    const admContainerHoras = document.getElementById('adm-container-horas');
+    const admHoraInicio = document.getElementById('adm-hora-inicio');
+    const admHoraFim = document.getElementById('adm-hora-fim');
+    const btnSalvarBloqueio = document.getElementById('btn-salvar-bloqueio');
+    const admListaBloqueios = document.getElementById('adm-lista-bloqueios');
+    const admListaTodosAgendamentos = document.getElementById('adm-lista-todos-agendamentos');
+
+    for (let h = 5; h <= 23; h++) {
+      const txt = `${String(h).padStart(2, '0')}:00`;
+      admCfgAbertura.innerHTML += `<option value="${h}">${txt}</option>`;
+      admCfgFechamento.innerHTML += `<option value="${h}">${txt}</option>`;
+    }
+
+    const hojeLocal = new Date();
+    const dataMinimaStr = `${hojeLocal.getFullYear()}-${String(hojeLocal.getMonth() + 1).padStart(2, '0')}-${String(hojeLocal.getDate()).padStart(2, '0')}`;
+    inputData.min = dataMinimaStr;
+    admDataBloqueio.min = dataMinimaStr;
+
+    // =====================================================================
+    // 2. SISTEMA DE NAVEGAÇÃO
+    // =====================================================================
+    function mostrarTela(nomeTela) {
+      feedbackGeral.classList.add('hidden');
+      viewNovoAgendamento.classList.add('hidden');
+      viewMeusAgendamentos.classList.add('hidden');
+      viewAdmin.classList.add('hidden');
+
+      if (nomeTela === 'meus-agendamentos') {
+        viewMeusAgendamentos.classList.remove('hidden');
+        txtBtnAgendamentos.textContent = 'Voltar ao Catálogo';
+      } else if (nomeTela === 'admin') {
+        viewAdmin.classList.remove('hidden');
+        txtBtnAgendamentos.textContent = 'Meus Agendamentos';
+        carregarDadosAdmin();
+      } else {
+        viewNovoAgendamento.classList.remove('hidden');
+        txtBtnAgendamentos.textContent = 'Meus Agendamentos';
+      }
+    }
+
+    btnAlternarAgendamentos.addEventListener('click', () => {
+      const jaEsta = !viewMeusAgendamentos.classList.contains('hidden');
+      mostrarTela(jaEsta ? 'catalogo' : 'meus-agendamentos');
+    });
+    btnVoltarAgendar.addEventListener('click', () => mostrarTela('catalogo'));
+    btnAbrirAdmin.addEventListener('click', () => mostrarTela('admin'));
+    btnFecharAdmin.addEventListener('click', () => mostrarTela('catalogo'));
+
+    admChkDiaInteiro.addEventListener('change', () => {
+      admContainerHoras.classList.toggle('hidden', admChkDiaInteiro.checked);
+    });
+
+    btnSair.addEventListener('click', async () => {
+      try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (e) {}
+      window.location.href = 'index.html';
+    });
+
+    btnCopiarPix.addEventListener('click', () => {
+      navigator.clipboard.writeText(chavePixSalao);
+      btnCopiarPix.textContent = '✅ Chave Copiada!';
+      setTimeout(() => { btnCopiarPix.textContent = '📋 Copiar Chave Pix'; }, 2500);
+    });
+
+    inputCompletarTel.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+      else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/, '($1) $2-$3');
+      else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+      else if (v.length > 0) v = v.replace(/^(\d*)$/, '($1');
+      e.target.value = v;
+    });
+
+    function formatarDinheiro(valor) {
+      return parseFloat(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function exibirFeedback(texto, erro = false) {
+      feedbackGeral.textContent = texto;
+      feedbackGeral.className = `mb-6 p-4 rounded-2xl text-xs font-bold text-center transition-all ${
+        erro ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+      }`;
+      feedbackGeral.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // =====================================================================
+    // 3. INICIALIZAR PERFIL E CONFIGURAÇÕES
+    // =====================================================================
+    async function carregarConfiguracoesSalao() {
+      try {
+        const { data } = await supabaseClient.from('configuracoes').select('*').eq('id', 1).maybeSingle();
+        if (data) {
+          horaAbertura = Number(data.hora_abertura ?? 8);
+          horaFechamento = Number(data.hora_fechamento ?? 20);
+          percentualSinal = Number(data.percentual_sinal ?? 30);
+          whatsappSalao = (data.whatsapp_salao || '5511999999999').replace(/\D/g, '');
+          chavePixSalao = data.chave_pix || 'barbara@beauty.com';
+        }
+        lblPercSinal.textContent = percentualSinal;
+        admCfgAbertura.value = horaAbertura;
+        admCfgFechamento.value = horaFechamento;
+        admCfgWpp.value = whatsappSalao;
+        admCfgPix.value = chavePixSalao;
+      } catch (e) {
+        console.warn('Usando configurações padrão:', e);
+      }
+    }
+
+    async function inicializar() {
+      if (!supabaseClient) return;
+
+      try {
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+        if (authError || !user) {
+          window.location.href = 'index.html';
+          return;
+        }
+        usuarioAtual = user;
+
+        let telefone = user.user_metadata?.phone || '';
+        let nomeExibicao = user.user_metadata?.full_name || user.user_metadata?.name || 'Cliente';
+
+        try {
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profile) {
+            if (profile.full_name) nomeExibicao = profile.full_name;
+            if (profile.phone) telefone = profile.phone;
+            if (profile.is_admin === true) {
+              isUsuarioAdmin = true;
+              btnAbrirAdmin.classList.remove('hidden');
+              tagSouAdmin.classList.remove('hidden');
+            }
+          }
+        } catch (e) {}
+
+        nomeClienteLogado = nomeExibicao;
+        telefoneClienteLogado = telefone;
+        msgBoasVindas.textContent = `Olá, ${nomeExibicao}! ✨`;
+
+        if (!telefone || telefone.trim() === '') {
+          cardTelefonePendente.classList.remove('hidden');
+        } else {
+          cardTelefonePendente.classList.add('hidden');
+        }
+
+        await Promise.all([
+          carregarConfiguracoesSalao(),
+          buscarServicos(),
+          buscarAgendamentosRealizados()
+        ]);
+      } catch (err) {
+        console.error('Erro na inicialização:', err);
+      }
+    }
+
+    // =====================================================================
+    // 4. CATÁLOGO DE SERVIÇOS
+    // =====================================================================
+    async function buscarServicos() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('servicos')
+          .select('*')
+          .eq('ativo', true)
+          .order('ordem', { ascending: true });
+
+        if (error) throw error;
+
+        listaServicos = data || [];
+        const categorias = {};
+        listaServicos.forEach(s => {
+          const cat = s.categoria || 'Maquiagem';
+          if (!categorias[cat]) categorias[cat] = [];
+          categorias[cat].push(s);
+        });
+
+        containerSessoesServicos.innerHTML = '';
+
+        Object.keys(categorias).forEach((nomeCategoria, index) => {
+          const secao = document.createElement('div');
+          secao.className = 'space-y-3 bg-white/50 p-4 rounded-3xl border border-[#EAD5C3]/40';
+          
+          const iconeCat = nomeCategoria === 'Maquiagem' ? '💄' : '📐';
+          const comecaAberta = (index === 0);
+          const idCat = nomeCategoria.replace(/\s+/g, '');
+
+          secao.innerHTML = `
+            <button type="button" id="btn-toggle-${idCat}" class="w-full flex items-center justify-between gap-2 py-1 cursor-pointer focus:outline-none text-left">
+              <div class="flex items-center gap-2.5">
+                <span class="text-lg bg-[#FAF6F0] w-9 h-9 rounded-xl flex items-center justify-center border border-[#EAD5C3]/40">${iconeCat}</span>
+                <div>
+                  <h3 class="titulo-elegante text-lg font-bold text-[#4A3B32] leading-tight">${nomeCategoria}</h3>
+                  <span id="sub-status-${idCat}" class="text-[11px] text-slate-400 font-medium">Escolha até 1 opção desta seção</span>
+                </div>
+              </div>
+              <span id="seta-${idCat}" class="text-xs font-bold text-[#C2957E] bg-white w-7 h-7 rounded-full flex items-center justify-center shadow-sm border border-[#EAD5C3]/30">${comecaAberta ? '▲' : '▼'}</span>
+            </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 ${comecaAberta ? '' : 'hidden'}" id="grid-cat-${idCat}"></div>
+          `;
+
+          containerSessoesServicos.appendChild(secao);
+          const btnToggle = secao.querySelector(`#btn-toggle-${idCat}`);
+          const gridCards = secao.querySelector(`#grid-cat-${idCat}`);
+          const seta = secao.querySelector(`#seta-${idCat}`);
+
+          btnToggle.addEventListener('click', () => {
+            const oculto = gridCards.classList.contains('hidden');
+            gridCards.classList.toggle('hidden', !oculto);
+            seta.textContent = oculto ? '▲' : '▼';
+          });
+
+          categorias[nomeCategoria].forEach(servico => {
+            const card = document.createElement('div');
+            card.id = `card-servico-${servico.id}`;
+            card.className = 'card-servico cursor-pointer rounded-2xl overflow-hidden border-2 border-slate-100 bg-white hover:border-[#EAD5C3] transition-all duration-200 flex flex-col justify-between shadow-sm';
+            
+            let badgeCilios = '';
+            if (servico.permite_adicional_cilios) {
+              badgeCilios = `<span class="inline-block text-[10px] font-semibold bg-amber-50/50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-lg">+ ${formatarDinheiro(10)} cílios (opcional)</span>`;
+            } else if (servico.cilios_inclusos) {
+              badgeCilios = `<span class="inline-block text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg">✓ Cílios inclusos</span>`;
+            }
+
+            const blocoImagem = servico.imagem_url 
+              ? `<div class="relative h-44 w-full overflow-hidden bg-[#FAF6F0] border-b border-slate-100">
+                   <img src="${servico.imagem_url}" alt="${servico.nome}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onerror="this.parentElement.style.display='none'">
+                   <span class="absolute bottom-2.5 right-2.5 bg-[#4A3B32]/90 backdrop-blur-sm text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow">${formatarDinheiro(servico.preco)}</span>
+                 </div>`
+              : '';
+
+            card.innerHTML = `
+              <div>
+                ${blocoImagem}
+                <div class="p-4">
+                  <div class="flex justify-between items-start gap-2">
+                    <div>
+                      <h4 class="font-bold text-[#4A3B32] text-sm">${servico.nome}</h4>
+                      <span class="text-[11px] text-slate-400 font-medium">⏱️ Aprox. ${servico.duracao_minutos} min</span>
+                    </div>
+                    ${!servico.imagem_url ? `<span class="text-base font-bold text-[#C2957E]">${formatarDinheiro(servico.preco)}</span>` : ''}
+                  </div>
+                  <p class="text-xs text-slate-600 mt-2 leading-relaxed">${servico.descricao || ''}</p>
+                </div>
+              </div>
+              <div class="px-4 pb-4 pt-2 border-t border-slate-50 flex justify-between items-center">
+                <div>${badgeCilios}</div>
+                <span class="btn-txt-selecionar text-[11px] font-bold text-[#C2957E] bg-[#FAF6F0] px-3 py-1.5 rounded-lg transition">Selecionar</span>
+              </div>
+            `;
+
+            card.addEventListener('click', () => alternarSelecaoServico(servico));
+            gridCards.appendChild(card);
+          });
+        });
+      } catch (err) {
+        console.error('Erro ao buscar serviços:', err);
+      }
+    }
+
+    // =====================================================================
+    // 5. REGRA DE SELEÇÃO E VALORES
+    // =====================================================================
+    function alternarSelecaoServico(servico) {
+      const cat = servico.categoria || 'Maquiagem';
+      if (selecoesPorCategoria[cat] && selecoesPorCategoria[cat].id === servico.id) {
+        delete selecoesPorCategoria[cat];
+      } else {
+        selecoesPorCategoria[cat] = servico;
+      }
+      atualizarInterfaceSelecao();
+    }
+
+    function calcularDuracaoTotal() {
+      const escolhidos = Object.values(selecoesPorCategoria);
+      let duracao = 0;
+      escolhidos.forEach(s => { duracao += Number(s.duracao_minutos); });
+      const comCilios = escolhidos.find(s => s.permite_adicional_cilios);
+      if (chkCilios.checked && comCilios) {
+        duracao += Number(comCilios.duracao_extra_cilios_minutos || 10);
+      }
+      return duracao;
+    }
+
+    function calcularPrecoTotal() {
+      const escolhidos = Object.values(selecoesPorCategoria);
+      let preco = 0;
+      escolhidos.forEach(s => { preco += parseFloat(s.preco); });
+      const comCilios = escolhidos.find(s => s.permite_adicional_cilios);
+      if (chkCilios.checked && comCilios) {
+        preco += parseFloat(comCilios.valor_adicional_cilios || 10.00);
+      }
+      return preco;
+    }
+
+    function atualizarInterfaceSelecao() {
+      document.querySelectorAll('.card-servico').forEach(c => {
+        c.classList.remove('card-selecionado');
+        const btnTxt = c.querySelector('.btn-txt-selecionar');
+        if (btnTxt) btnTxt.textContent = 'Selecionar';
+      });
+
+      const servicosEscolhidos = Object.values(selecoesPorCategoria);
+
+      servicosEscolhidos.forEach(serv => {
+        const cardEl = document.getElementById(`card-servico-${serv.id}`);
+        if (cardEl) {
+          cardEl.classList.add('card-selecionado');
+          const btnTxt = cardEl.querySelector('.btn-txt-selecionar');
+          if (btnTxt) btnTxt.textContent = '✓ Selecionado';
+        }
+      });
+
+      ['Maquiagem', 'Sobrancelhas'].forEach(cat => {
+        const subStatus = document.getElementById(`sub-status-${cat.replace(/\s+/g, '')}`);
+        if (subStatus) {
+          subStatus.innerHTML = selecoesPorCategoria[cat]
+            ? `<span class="text-[#C2957E] font-bold">✓ ${selecoesPorCategoria[cat].nome} selecionado</span>`
+            : 'Escolha até 1 opção desta seção';
+        }
+      });
+
+      if (servicosEscolhidos.length === 0) {
+        painelDetalhesEscolha.classList.add('hidden');
+        return;
+      }
+
+      listaItensSelecionados.innerHTML = '';
+      servicosEscolhidos.forEach(serv => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between bg-[#FAF6F0] p-3.5 rounded-2xl border border-[#EAD5C3]/60';
+        item.innerHTML = `
+          <div>
+            <p class="text-[10px] uppercase tracking-wider font-bold text-[#C2957E]">${serv.categoria}</p>
+            <h4 class="text-xs font-bold text-[#4A3B32]">${serv.nome} <span class="font-normal text-slate-400">(${serv.duracao_minutos} min)</span></h4>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-bold text-[#4A3B32]">${formatarDinheiro(serv.preco)}</span>
+            <button type="button" data-cat="${serv.categoria}" class="btn-remover-item text-xs text-red-400 hover:text-red-600 font-bold px-2 py-1 cursor-pointer">✕</button>
+          </div>
+        `;
+        listaItensSelecionados.appendChild(item);
+      });
+
+      document.querySelectorAll('.btn-remover-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          delete selecoesPorCategoria[e.currentTarget.getAttribute('data-cat')];
+          atualizarInterfaceSelecao();
+        });
+      });
+
+      const temPermissaoCilios = servicosEscolhidos.some(s => s.permite_adicional_cilios);
+      const temCiliosInclusos = servicosEscolhidos.some(s => s.cilios_inclusos);
+
+      containerAdicionalCilios.classList.toggle('hidden', !temPermissaoCilios);
+      containerAdicionalCilios.classList.toggle('flex', temPermissaoCilios);
+      if (!temPermissaoCilios) chkCilios.checked = false;
+      containerCiliosInclusos.classList.toggle('hidden', temPermissaoCilios || !temCiliosInclusos);
+
+      painelDetalhesEscolha.classList.remove('hidden');
+      atualizarResumoValores();
+
+      if (inputData.value) {
+        carregarHorariosDisponiveis();
+      }
+    }
+
+    chkCilios.addEventListener('change', () => {
+      atualizarResumoValores();
+      if (inputData.value) carregarHorariosDisponiveis();
+    });
+
+    function atualizarResumoValores() {
+      const tempoTotal = calcularDuracaoTotal();
+      const precoTotal = calcularPrecoTotal();
+      const valorSinal = precoTotal * (percentualSinal / 100);
+
+      resumoTempo.textContent = `${tempoTotal} minutos`;
+      resumoValor.textContent = formatarDinheiro(precoTotal);
+      resumoSinal.textContent = formatarDinheiro(valorSinal);
+      labelTempoNecessario.textContent = `(necessário ${tempoTotal} min livres)`;
+    }
+
+    // =====================================================================
+    // 6. GRADE DE HORÁRIOS DISPONÍVEIS
+    // =====================================================================
+    inputData.addEventListener('change', carregarHorariosDisponiveis);
+
+    async function carregarHorariosDisponiveis() {
+      horarioSelecionado = null;
+      gradeHorarios.innerHTML = '';
+      
+      const dataEscolhida = inputData.value;
+      if (!dataEscolhida) return;
+
+      const duracaoMinutos = calcularDuracaoTotal();
+      msgAvisoHorarios.textContent = 'Consultando agenda em tempo real...';
+      msgAvisoHorarios.classList.remove('hidden');
+
+      try {
+        const inicioDoDiaISO = new Date(`${dataEscolhida}T00:00:00`).toISOString();
+        const fimDoDiaISO = new Date(`${dataEscolhida}T23:59:59`).toISOString();
+
+        const [resAgendamentos, resBloqueios] = await Promise.all([
+          supabaseClient
+            .from('agendamentos')
+            .select('data_hora_inicio, data_hora_fim, status')
+            .neq('status', 'cancelado')
+            .gte('data_hora_inicio', inicioDoDiaISO)
+            .lte('data_hora_inicio', fimDoDiaISO),
+          
+          supabaseClient
+            .from('bloqueios_agenda')
+            .select('data_hora_inicio, data_hora_fim, dia_inteiro')
+            .lte('data_hora_inicio', fimDoDiaISO)
+            .gte('data_hora_fim', inicioDoDiaISO)
+        ]);
+
+        const agendamentosOcupados = resAgendamentos.data || [];
+        const bloqueios = resBloqueios.data || [];
+
+        if (bloqueios.some(b => b.dia_inteiro === true)) {
+          msgAvisoHorarios.textContent = 'Esta data está fechada para agendamentos. Escolha outro dia!';
+          return;
+        }
+
+        const intervalosOcupados = [
+          ...agendamentosOcupados.map(ag => ({
+            inicio: new Date(ag.data_hora_inicio).getTime(),
+            fim: new Date(ag.data_hora_fim).getTime()
+          })),
+          ...bloqueios.map(bl => ({
+            inicio: new Date(bl.data_hora_inicio).getTime(),
+            fim: new Date(bl.data_hora_fim).getTime()
+          }))
+        ];
+
+        const slotsValidos = [];
+        const agoraTimestamp = new Date().getTime();
+
+        for (let hora = horaAbertura; hora < horaFechamento; hora++) {
+          for (let minuto = 0; minuto < 60; minuto += INTERVALO_MINUTOS) {
+            const horaStr = String(hora).padStart(2, '0');
+            const minStr = String(minuto).padStart(2, '0');
+            const slotInicio = new Date(`${dataEscolhida}T${horaStr}:${minStr}:00`);
+            const slotFim = new Date(slotInicio.getTime() + duracaoMinutos * 60 * 1000);
+
+            if (slotInicio.getTime() <= agoraTimestamp) continue;
+
+            const limiteFechamento = new Date(`${dataEscolhida}T${String(horaFechamento).padStart(2, '0')}:00:00`);
+            if (slotFim.getTime() > limiteFechamento.getTime()) continue;
+
+            const temConflito = intervalosOcupados.some(ocupado => {
+              return slotInicio.getTime() < ocupado.fim && slotFim.getTime() > ocupado.inicio;
+            });
+
+            if (!temConflito) slotsValidos.push(`${horaStr}:${minStr}`);
+          }
+        }
+
+        if (slotsValidos.length === 0) {
+          msgAvisoHorarios.textContent = 'Não há horários vagos com duração suficiente nesta data. Escolha outro dia!';
+          return;
+        }
+
+        msgAvisoHorarios.classList.add('hidden');
+        slotsValidos.forEach(horaTexto => {
+          const btnSlot = document.createElement('button');
+          btnSlot.type = 'button';
+          btnSlot.className = 'btn-slot-hora py-2 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:border-[#C2957E] transition shadow-sm cursor-pointer';
+          btnSlot.textContent = horaTexto;
+
+          btnSlot.addEventListener('click', () => {
+            document.querySelectorAll('.btn-slot-hora').forEach(b => b.classList.remove('slot-selecionado'));
+            btnSlot.classList.add('slot-selecionado');
+            horarioSelecionado = horaTexto;
+          });
+          gradeHorarios.appendChild(btnSlot);
+        });
+      } catch (err) {
+        msgAvisoHorarios.textContent = 'Erro ao carregar horários.';
+      }
+    }
+
+    // =====================================================================
+    // 7. WHATSAPP E CONFIRMAÇÃO DO SINAL DE 30%
+    // =====================================================================
+    btnSalvarTel.addEventListener('click', async () => {
+      msgErroTel.classList.add('hidden');
+      const tel = inputCompletarTel.value.trim();
+
+      if (tel.length < 14) {
+        msgErroTel.textContent = 'Informe um WhatsApp válido com DDD.';
+        msgErroTel.classList.remove('hidden');
+        return;
+      }
+
+      btnSalvarTel.disabled = true;
+      try {
+        const { error } = await supabaseClient
+          .from('profiles')
+          .upsert({
+            id: usuarioAtual.id,
+            phone: tel,
+            full_name: nomeClienteLogado,
+            email: usuarioAtual.email
+          }, { onConflict: 'id' });
+
+        btnSalvarTel.disabled = false;
+        if (error) throw error;
+
+        telefoneClienteLogado = tel;
+        cardTelefonePendente.innerHTML = `<div class="text-emerald-700 text-xs font-bold py-1">✅ WhatsApp validado com sucesso!</div>`;
+        setTimeout(() => cardTelefonePendente.classList.add('hidden'), 2000);
+      } catch (err) {
+        btnSalvarTel.disabled = false;
+        msgErroTel.textContent = 'Erro ao salvar: ' + err.message;
+        msgErroTel.classList.remove('hidden');
+      }
+    });
+
+    btnConfirmarAgendamento.addEventListener('click', async () => {
+      feedbackGeral.classList.add('hidden');
+
+      if (!cardTelefonePendente.classList.contains('hidden') || !telefoneClienteLogado) {
+        exibirFeedback('⚠️ É obrigatório salvar seu WhatsApp no aviso amarelo no topo para realizar um agendamento!', true);
+        inputCompletarTel.focus();
+        return;
+      }
+
+      const servicosEscolhidos = Object.values(selecoesPorCategoria);
+      if (servicosEscolhidos.length === 0 || !inputData.value || !horarioSelecionado) {
+        exibirFeedback('Selecione o procedimento, a data e um horário na grade!', true);
+        return;
+      }
+
+      btnConfirmarAgendamento.disabled = true;
+      btnConfirmarAgendamento.textContent = 'Reservando seu horário...';
+
+      try {
+        const duracaoTotal = calcularDuracaoTotal();
+        const precoFinal = calcularPrecoTotal();
+        const valorSinal = precoFinal * (percentualSinal / 100);
+        const idsEscolhidos = servicosEscolhidos.map(s => s.id);
+        const resumoNomes = servicosEscolhidos.map(s => s.nome).join(' + ');
+        const servicoComCilios = servicosEscolhidos.find(s => s.permite_adicional_cilios);
+        const querCilios = chkCilios.checked && Boolean(servicoComCilios);
+
+        const dataHoraInicio = new Date(`${inputData.value}T${horarioSelecionado}:00`);
+        const dataHoraFim = new Date(dataHoraInicio.getTime() + duracaoTotal * 60 * 1000);
+
+        const { error } = await supabaseClient
+          .from('agendamentos')
+          .insert({
+            cliente_id: usuarioAtual.id,
+            servicos_ids: idsEscolhidos,
+            resumo_servicos: resumoNomes,
+            inclui_cilios: querCilios,
+            valor_total: precoFinal,
+            valor_sinal: valorSinal,
+            duracao_total_minutos: duracaoTotal,
+            data_hora_inicio: dataHoraInicio.toISOString(),
+            data_hora_fim: dataHoraFim.toISOString(),
+            observacoes: inputObservacoes.value.trim(),
+            status: 'pendente_sinal' // Começa pendente até você receber o Pix e confirmar no ADM
+          });
+
+        btnConfirmarAgendamento.disabled = false;
+        btnConfirmarAgendamento.textContent = 'Confirmar e Garantir Horário ✨';
+
+        if (error) {
+          if (error.message.includes('overlapping') || error.code === '23P01') {
+            exibirFeedback('Este horário acabou de ser ocupado por outra cliente. Escolha outro horário!', true);
+            carregarHorariosDisponiveis();
+          } else {
+            exibirFeedback('Erro ao agendar: ' + error.message, true);
+          }
+          return;
+        }
+
+        const dataFormatada = dataHoraInicio.toLocaleDateString('pt-BR');
+        const horaIniStr = dataHoraInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const horaFimStr = dataHoraFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        // Mensagem de WhatsApp idêntica ao modelo solicitado, com quebras de linha limpas
+        const msgWhatsApp = encodeURIComponent(
+          `Olá Bárbara! ✨ Acabei de fazer um agendamento no site:\n\n` +
+          `👤 *Cliente:* ${nomeClienteLogado}\n` +
+          `💄 *Procedimento:* ${resumoNomes}${querCilios ? ' (+ Cílios)' : ''}\n` +
+          `📅 *Data:* ${dataFormatada} das ${horaIniStr} às ${horaFimStr}\n` +
+          `💰 *Valor Total:* ${formatarDinheiro(precoFinal)}\n` +
+          `💳 *Sinal de ${percentualSinal}%:* ${formatarDinheiro(valorSinal)}\n\n` +
+          `Segue o comprovante de pagamento do sinal para confirmar definitivamente meu horário!`
+        );
+
+        pixValorSinal.textContent = formatarDinheiro(valorSinal);
+        pixChaveTexto.textContent = chavePixSalao;
+        btnWppConfirmacao.href = `https://wa.me/${whatsappSalao}?text=${msgWhatsApp}`;
+        cardPixPosAgendamento.classList.remove('hidden');
+
+        // Resetar form
+        selecoesPorCategoria = {};
+        horarioSelecionado = null;
+        chkCilios.checked = false;
+        inputData.value = '';
+        gradeHorarios.innerHTML = '';
+        inputObservacoes.value = '';
+        atualizarInterfaceSelecao();
+
+        await buscarAgendamentosRealizados();
+        mostrarTela('meus-agendamentos');
+        exibirFeedback('Horário pré-reservado! Por favor, realize o Pix de sinal de 30% abaixo e envie no WhatsApp.');
+      } catch (err) {
+        btnConfirmarAgendamento.disabled = false;
+        exibirFeedback('Erro inesperado: ' + err.message, true);
+      }
+    });
+
+    // =====================================================================
+    // 8. LISTAR MEUS AGENDAMENTOS (CLIENTE COM CONTROLE FINANCEIRO)
+    // =====================================================================
+    async function buscarAgendamentosRealizados() {
+      try {
+        const { data: agendamentos, error } = await supabaseClient
+          .from('agendamentos')
+          .select('*')
+          .eq('cliente_id', usuarioAtual.id)
+          .order('data_hora_inicio', { ascending: true });
+
+        if (error) throw error;
+
+        const lista = agendamentos || [];
+        const ativos = lista.filter(a => a.status !== 'cancelado');
+
+        if (ativos.length > 0) {
+          badgeQtdAgendamentos.textContent = ativos.length;
+          badgeQtdAgendamentos.classList.remove('hidden');
+        } else {
+          badgeQtdAgendamentos.classList.add('hidden');
+        }
+
+        if (lista.length === 0) {
+          listaAgendamentosContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">Você ainda não possui nenhum horário agendado.</p>';
+          return;
+        }
+
+        listaAgendamentosContainer.innerHTML = '';
+        lista.forEach(ag => {
+          const dtIni = new Date(ag.data_hora_inicio);
+          const dtFim = new Date(ag.data_hora_fim);
+          const dataFormatada = dtIni.toLocaleDateString('pt-BR');
+          const horaIni = dtIni.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const horaFim = dtFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const valorSinal = ag.valor_sinal || (ag.valor_total * 0.3);
+
+          // Rótulo visual estilizado do status de pagamento do sinal
+          let badgeStatus = '';
+          if (ag.status === 'cancelado') {
+            badgeStatus = `<span class="px-2.5 py-0.5 bg-red-100 text-red-700 font-bold rounded-full text-[10px] uppercase">Cancelado</span>`;
+          } else if (ag.status === 'pendente_sinal') {
+            badgeStatus = `<span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] uppercase">⏳ Aguardando Comprovante</span>`;
+          } else if (ag.status === 'confirmado') {
+            badgeStatus = `<span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] uppercase">✅ Confirmado</span>`;
+          }
+
+          const msgWppItem = encodeURIComponent(
+            `Olá Bárbara! Segue meu comprovante de sinal para o agendamento de *${ag.resumo_servicos}* no dia *${dataFormatada} das ${horaIni} às ${horaFim}* (Sinal: ${formatarDinheiro(valorSinal)}).`
+          );
+
+          const div = document.createElement('div');
+          div.className = "bg-[#FAF6F0]/60 p-4 rounded-2xl border border-[#EAD5C3]/50 flex flex-wrap justify-between items-center gap-4 text-xs shadow-sm";
+          div.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <p class="font-bold text-[#4A3B32] text-sm">💄 ${ag.resumo_servicos || 'Procedimento'}</p>
+                ${badgeStatus}
+              </div>
+              <p class="text-slate-600 font-medium">📅 ${dataFormatada} às ${horaIni} - ${horaFim} <span class="text-slate-400">(${ag.duracao_total_minutos || 60} min)</span></p>
+              <p class="text-slate-500">Total: <strong>${formatarDinheiro(ag.valor_total)}</strong> (Sinal de 30%: <strong>${formatarDinheiro(valorSinal)}</strong>)</p>
+              ${ag.inclui_cilios ? '<p class="text-[11px] text-amber-800 font-semibold">👁️ + Adicional de Cílios incluso</p>' : ''}
+              ${ag.motivo_cancelamento ? `<p class="text-[11px] text-red-500 italic">Cancelado: "${ag.motivo_cancelamento}"</p>` : ''}
+            </div>
+            <div class="flex items-center gap-2">
+              ${ag.status !== 'cancelado' ? `
+                <a href="https://wa.me/${whatsappSalao}?text=${msgWppItem}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl transition">
+                  📲 Mandar Comprovante
+                </a>
+                <button type="button" data-id="${ag.id}" data-resumo="${ag.resumo_servicos} (${dataFormatada} às ${horaIni})" class="btn-abrir-modal-cancelar bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-xl transition cursor-pointer">
+                  Cancelar
+                </button>
+              ` : ''}
+            </div>
+          `;
+          listaAgendamentosContainer.appendChild(div);
+        });
+
+        document.querySelectorAll('.btn-abrir-modal-cancelar').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            agendamentoParaCancelar = e.currentTarget.getAttribute('data-id');
+            modalResumoCancelar.textContent = e.currentTarget.getAttribute('data-resumo');
+            inputMotivoCancelamento.value = '';
+            modalCancelamentoCliente.classList.remove('hidden');
+          });
+        });
+      } catch (err) {}
+    }
+
+    btnFecharModalCancelar.addEventListener('click', () => {
+      modalCancelamentoCliente.classList.add('hidden');
+      agendamentoParaCancelar = null;
+    });
+
+    btnConfirmarCancelamentoCliente.addEventListener('click', async () => {
+      if (!agendamentoParaCancelar) return;
+      btnConfirmarCancelamentoCliente.disabled = true;
+
+      try {
+        const { error } = await supabaseClient
+          .from('agendamentos')
+          .update({
+            status: 'cancelado',
+            motivo_cancelamento: inputMotivoCancelamento.value.trim() || 'Desistência da cliente',
+            cancelado_por: 'cliente'
+          })
+          .eq('id', agendamentoParaCancelar);
+
+        btnConfirmarCancelamentoCliente.disabled = false;
+        modalCancelamentoCliente.classList.add('hidden');
+
+        if (error) throw error;
+
+        await buscarAgendamentosRealizados();
+        exibirFeedback('Seu agendamento foi cancelado e o horário foi liberado.');
+      } catch (err) {
+        btnConfirmarCancelamentoCliente.disabled = false;
+        exibirFeedback('Erro ao cancelar: ' + err.message, true);
+      }
+    });
+
+    // =====================================================================
+    // 9. PAINEL DE ADMINISTRAÇÃO (GERENCIAMENTO DE EXPEDIENTE E PAGAMENTOS)
+    // =====================================================================
+    async function carregarDadosAdmin() {
+      if (!isUsuarioAdmin) return;
+      await Promise.all([listarBloqueiosAdmin(), listarTodosAgendamentosAdmin()]);
+    }
+
+    btnSalvarConfig.addEventListener('click', async () => {
+      const abertura = Number(admCfgAbertura.value);
+      const fechamento = Number(admCfgFechamento.value);
+
+      if (fechamento <= abertura) {
+        exibirFeedback('O horário de término deve ser maior que o de abertura!', true);
+        return;
+      }
+
+      btnSalvarConfig.disabled = true;
+      try {
+        const { error } = await supabaseClient
+          .from('configuracoes')
+          .update({
+            hora_abertura: abertura,
+            hora_fechamento: fechamento,
+            whatsapp_salao: admCfgWpp.value.replace(/\D/g, ''),
+            chave_pix: admCfgPix.value.trim()
+          })
+          .eq('id', 1);
+
+        btnSalvarConfig.disabled = false;
+        if (error) throw error;
+
+        await carregarConfiguracoesSalao();
+        exibirFeedback('Horário de funcionamento e dados de recebimento atualizados! ⏰');
+      } catch (err) {
+        btnSalvarConfig.disabled = false;
+        exibirFeedback('Erro ao salvar: ' + err.message, true);
+      }
+    });
+
+    btnSalvarBloqueio.addEventListener('click', async () => {
+      if (!admDataBloqueio.value) {
+        exibirFeedback('Selecione a data que deseja bloquear.', true);
+        return;
+      }
+
+      const diaInteiro = admChkDiaInteiro.checked;
+      let inicioISO, fimISO;
+
+      if (diaInteiro) {
+        inicioISO = new Date(`${admDataBloqueio.value}T00:00:00`).toISOString();
+        fimISO = new Date(`${admDataBloqueio.value}T23:59:59`).toISOString();
+      } else {
+        const dtIni = new Date(`${admDataBloqueio.value}T${admHoraInicio.value}:00`);
+        const dtFim = new Date(`${admDataBloqueio.value}T${admHoraFim.value}:00`);
+        if (dtFim <= dtIni) {
+          exibirFeedback('A hora final deve ser maior que a de início!', true);
+          return;
+        }
+        inicioISO = dtIni.toISOString();
+        fimISO = dtFim.toISOString();
+      }
+
+      btnSalvarBloqueio.disabled = true;
+      try {
+        const { error } = await supabaseClient
+          .from('bloqueios_agenda')
+          .insert({
+            motivo: admMotivoBloqueio.value.trim() || 'Indisponível',
+            data_hora_inicio: inicioISO,
+            data_hora_fim: fimISO,
+            dia_inteiro: diaInteiro
+          });
+
+        btnSalvarBloqueio.disabled = false;
+        if (error) throw error;
+
+        admMotivoBloqueio.value = '';
+        exibirFeedback('Bloqueio confirmado! 🔒');
+        await listarBloqueiosAdmin();
+      } catch (err) {
+        btnSalvarBloqueio.disabled = false;
+        exibirFeedback('Erro ao salvar bloqueio: ' + err.message, true);
+      }
+    });
+
+    async function listarBloqueiosAdmin() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('bloqueios_agenda')
+          .select('*')
+          .order('data_hora_inicio', { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          admListaBloqueios.innerHTML = '<p class="text-xs text-slate-400 italic py-2">Nenhum bloqueio ativo.</p>';
+          return;
+        }
+
+        admListaBloqueios.innerHTML = '';
+        data.forEach(bl => {
+          const dtIni = new Date(bl.data_hora_inicio);
+          const dtFim = new Date(bl.data_hora_fim);
+          const dataStr = dtIni.toLocaleDateString('pt-BR');
+          const horarioStr = bl.dia_inteiro 
+            ? 'Dia Inteiro Fechado' 
+            : `Das ${dtIni.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} às ${dtFim.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
+
+          const item = document.createElement('div');
+          item.className = 'flex justify-between items-center bg-white p-3.5 rounded-2xl border border-slate-200 text-xs shadow-sm';
+          item.innerHTML = `
+            <div>
+              <span class="font-bold text-[#4A3B32]">📅 ${dataStr} — ${horarioStr}</span>
+              <p class="text-slate-500 mt-0.5">Motivo: ${bl.motivo || 'Indisponível'}</p>
+            </div>
+            <button type="button" data-id="${bl.id}" class="btn-excluir-bloqueio text-red-600 hover:bg-red-50 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer">
+              Excluir ✕
+            </button>
+          `;
+          admListaBloqueios.appendChild(item);
+        });
+
+        document.querySelectorAll('.btn-excluir-bloqueio').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const idBloqueio = e.currentTarget.getAttribute('data-id');
+            await supabaseClient.from('bloqueios_agenda').delete().eq('id', idBloqueio);
+            await listarBloqueiosAdmin();
+            exibirFeedback('Bloqueio de agenda excluído com sucesso!');
+          });
+        });
+      } catch (err) {}
+    }
+
+    // Listar todos os agendamentos das clientes (Com Hora Início e Hora Fim)
+    async function listarTodosAgendamentosAdmin() {
+      try {
+        const [resAg, resPerfis] = await Promise.all([
+          supabaseClient.from('agendamentos').select('*').order('data_hora_inicio', { ascending: true }),
+          supabaseClient.from('profiles').select('id, full_name, phone, email')
+        ]);
+
+        if (resAg.error) throw resAg.error;
+
+        const agendamentos = resAg.data || [];
+        const mapaPerfis = {};
+        (resPerfis.data || []).forEach(p => { mapaPerfis[p.id] = p; });
+
+        if (agendamentos.length === 0) {
+          admListaTodosAgendamentos.innerHTML = '<p class="text-xs text-slate-400 italic py-2">Nenhum agendamento realizado.</p>';
+          return;
+        }
+
+        admListaTodosAgendamentos.innerHTML = '';
+        agendamentos.forEach(ag => {
+          const cliente = mapaPerfis[ag.cliente_id] || {};
+          const dtIni = new Date(ag.data_hora_inicio);
+          const dtFim = new Date(ag.data_hora_fim);
+          const dataStr = dtIni.toLocaleDateString('pt-BR');
+          const horaIniStr = dtIni.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const horaFimStr = dtFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const numLimpoWpp = (cliente.phone || '').replace(/\D/g, '');
+          const valorSinal = ag.valor_sinal || (ag.valor_total * 0.3);
+
+          let badgeFinanceiro = '';
+          let botaoConfirmarPagamento = '';
+
+          if (ag.status === 'cancelado') {
+            badgeFinanceiro = `<span class="px-2 py-0.5 bg-red-100 text-red-700 font-bold rounded-full text-[10px] uppercase">Cancelado</span>`;
+          } else if (ag.status === 'pendente_sinal') {
+            badgeFinanceiro = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] uppercase">⏳ Sinal Pendente</span>`;
+            botaoConfirmarPagamento = `
+              <button type="button" data-id="${ag.id}" class="btn-adm-confirmar-sinal bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl transition cursor-pointer">
+                💰 Confirmar Sinal
+              </button>
+            `;
+          } else if (ag.status === 'confirmado') {
+            badgeFinanceiro = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] uppercase">✓ Sinal Pago</span>`;
+          }
+
+          const card = document.createElement('div');
+          card.className = 'bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-4 text-xs shadow-sm';
+          card.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm text-[#4A3B32]">👤 ${cliente.full_name || 'Cliente'}</span>
+                ${badgeFinanceiro}
+              </div>
+              <p class="font-semibold text-[#C2957E]">💄 ${ag.resumo_servicos} ${ag.inclui_cilios ? '(+ Cílios)' : ''}</p>
+              <p class="text-slate-600">
+                📅 <strong>${dataStr} às ${horaIniStr} - ${horaFimStr}</strong> (${ag.duracao_total_minutos} min) — Total: <strong>${formatarDinheiro(ag.valor_total)}</strong> <span class="text-slate-400">(Sinal 30%: ${formatarDinheiro(valorSinal)})</span>
+              </p>
+              ${ag.observacoes ? `<p class="text-slate-500 italic">💬 Obs: "${ag.observacoes}"</p>` : ''}
+              ${ag.motivo_cancelamento ? `<p class="text-red-500 font-medium">❌ Motivo Cancelamento: "${ag.motivo_cancelamento}"</p>` : ''}
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              ${botaoConfirmarPagamento}
+              ${numLimpoWpp ? `<a href="https://wa.me/55${numLimpoWpp}" target="_blank" class="bg-[#FAF6F0] hover:bg-[#EAD5C3]/30 border border-[#EAD5C3] text-[#4A3B32] font-bold px-3 py-2 rounded-xl transition">📲 Conversar</a>` : ''}
+              ${ag.status !== 'cancelado' ? `<button type="button" data-id="${ag.id}" class="btn-adm-cancelar bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-xl transition cursor-pointer">Cancelar</button>` : ''}
+            </div>
+          `;
+          admListaTodosAgendamentos.appendChild(card);
+        });
+
+        // Configurar Evento para Confirmar Pagamento de Sinal
+        document.querySelectorAll('.btn-adm-confirmar-sinal').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const idAg = e.currentTarget.getAttribute('data-id');
+            const { error } = await supabaseClient
+              .from('agendamentos')
+              .update({ status: 'confirmado' })
+              .eq('id', idAg);
+
+            if (error) {
+              exibirFeedback('Erro ao confirmar sinal: ' + error.message, true);
+            } else {
+              exibirFeedback('Pagamento do sinal confirmado! O agendamento está ativo e a cliente já pode ver.');
+              await listarTodosAgendamentosAdmin();
+            }
+          });
+        });
+
+        // Configurar Evento para Cancelar Atendimento por parte do ADM
+        document.querySelectorAll('.btn-adm-cancelar').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const idAg = e.currentTarget.getAttribute('data-id');
+            const motivo = prompt('Digite o motivo do cancelamento (opcional):') || 'Cancelado pela administração';
+            const { error } = await supabaseClient
+              .from('agendamentos')
+              .update({ 
+                status: 'cancelado', 
+                motivo_cancelamento: motivo,
+                cancelado_por: 'admin' 
+              })
+              .eq('id', idAg);
+
+            if (error) {
+              exibirFeedback('Erro ao cancelar: ' + error.message, true);
+            } else {
+              exibirFeedback('Agendamento cancelado!');
+              await listarTodosAgendamentosAdmin();
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error('Erro ao listar agenda geral:', err);
+      }
+    }
+
+    inicializar();
+  </script>
+</body>
+</html>

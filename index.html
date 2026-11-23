@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barbara Fernandes Beauty - Acesso</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .titulo-elegante { font-family: 'Playfair Display', serif; }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+    .shake { animation: shake 0.2s ease-in-out 0s 2; }
+
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-tr from-[#FAF6F0] via-[#F4EAE1] to-[#EAD5C3] flex items-center justify-center min-h-screen p-4">
+
+  <div class="bg-white/85 backdrop-blur-md p-8 rounded-3xl shadow-xl w-full max-w-md border border-[#EAD5C3]/40">
+    <!-- Cabeçalho -->
+    <div class="text-center mb-6">
+      <h1 class="titulo-elegante text-3xl font-bold text-[#4A3B32] tracking-wide">Barbara Fernandes</h1>
+      <p class="titulo-elegante text-xs uppercase tracking-[0.2em] text-[#C2957E] font-medium mt-1">Beauty &amp; Makeup</p>
+      <p id="subtitulo-tela" class="text-sm text-slate-500 mt-4">Faça login para agendar sua produção</p>
+    </div>
+
+    <!-- Mensagens de Feedback -->
+    <div id="mensagem" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold text-center transition-all duration-300"></div>
+
+    <!-- 1. FORMULÁRIO PRINCIPAL (LOGIN / CADASTRO) -->
+    <div id="container-principal" class="space-y-4">
+      
+      <!-- Campos de Cadastro -->
+      <div id="campos-cadastro" class="hidden space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1">Nome Completo</label>
+          <input type="text" id="cadastro-nome" placeholder="Seu nome completo"
+            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none transition bg-white/60">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1">WhatsApp / Telefone</label>
+          <input type="tel" id="cadastro-telefone" maxlength="15" placeholder="(11) 99999-9999"
+            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none transition bg-white/60">
+        </div>
+      </div>
+
+      <!-- Campos comuns: E-mail e Senha -->
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1">E-mail</label>
+        <input type="email" id="auth-email" required placeholder="seu@email.com"
+          class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none transition bg-white/60">
+      </div>
+
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32]">Senha</label>
+          <button id="btn-ir-recuperar" class="text-xs text-[#C2957E] hover:underline font-medium focus:outline-none">Esqueceu a senha?</button>
+        </div>
+        <div class="relative">
+          <input type="password" id="auth-password" required minlength="6" placeholder="••••••••"
+            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none transition bg-white/60 pr-10">
+          
+          <button type="button" id="btn-toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-[#4A3B32] focus:outline-none">
+            <svg id="eye-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path id="eye-path" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path id="eye-body" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="pt-2">
+        <button id="btn-entrar" class="w-full bg-[#4A3B32] hover:bg-[#382C25] text-white font-semibold py-3 rounded-xl transition shadow-md shadow-[#4A3B32]/10 mb-3 disabled:opacity-50 disabled:cursor-not-allowed">
+          Entrar
+        </button>
+
+        <button id="btn-confirmar-cadastro" class="hidden w-full bg-[#C2957E] hover:bg-[#B0826B] text-white font-semibold py-3 rounded-xl transition shadow-md shadow-[#C2957E]/10 mb-3">
+          Criar minha conta
+        </button>
+
+        <p class="text-center text-xs text-slate-500">
+          <span id="texto-alternar">Não tem uma conta?</span>
+          <button id="btn-alternar" class="text-[#C2957E] hover:underline font-semibold ml-1 focus:outline-none">Cadastre-se</button>
+        </p>
+      </div>
+
+      <!-- Divisor e Google -->
+      <div id="divisor-google">
+        <div class="relative flex py-5 items-center">
+          <div class="flex-grow border-t border-slate-200"></div>
+          <span class="flex-shrink mx-4 text-slate-400 text-[10px] uppercase tracking-widest">ou</span>
+          <div class="flex-grow border-t border-slate-200"></div>
+        </div>
+        <button id="btn-google" type="button"
+          class="w-full flex items-center justify-center gap-3 border border-slate-200 hover:bg-slate-50 py-3 rounded-xl font-medium text-slate-700 transition bg-white/60">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+          Continuar com o Google
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. FORMULÁRIO DE RECUPERAÇÃO DE SENHA -->
+    <div id="container-recuperacao" class="hidden space-y-4">
+      <p class="text-xs text-slate-500 text-center leading-relaxed">Insira o e-mail associado à sua conta. Enviaremos um link seguro para você redefinir sua senha.</p>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1">E-mail Cadastrado</label>
+        <input type="email" id="recuperar-email" placeholder="seu@email.com"
+          class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none transition bg-white/60">
+      </div>
+      <button id="btn-enviar-link" class="w-full bg-[#C2957E] hover:bg-[#B0826B] text-white font-semibold py-3 rounded-xl transition shadow-md shadow-[#C2957E]/10">
+        Enviar Link de Recuperação
+      </button>
+      <button id="btn-voltar-login" class="w-full text-xs text-slate-500 hover:underline font-semibold block text-center mt-2 focus:outline-none">
+        Voltar para o Login
+      </button>
+    </div>
+
+    <!-- 3. FORMULÁRIO DE NOVA SENHA -->
+    <div id="container-nova-senha" class="hidden space-y-4">
+      <p class="text-xs text-slate-500 text-center leading-relaxed">Crie uma nova senha de acesso com no mínimo 6 dígitos.</p>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#4A3B32] mb-1">Nova Senha</label>
+        <div class="relative">
+          <input type="password" id="nova-senha-input" minlength="6" placeholder="••••••••"
+            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#C2957E] focus:outline-none transition bg-white/60 pr-10">
+          
+          <button type="button" id="btn-toggle-nova-senha" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-[#4A3B32] focus:outline-none">
+            <svg id="eye-icon-nova" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path id="eye-path-nova" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path id="eye-body-nova" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button id="btn-salvar-nova-senha" class="w-full bg-[#4A3B32] hover:bg-[#382C25] text-white font-semibold py-3 rounded-xl transition">
+        Salvar Nova Senha
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://fpcfdaptizetnpedipdh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwY2ZkYXB0aXpldG5wZWRpcGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyMTE1NDAsImV4cCI6MjExMDc4NzU0MH0.gC-6U45nyBM4Xz8AIP6ESdJkYMUrYYxApEBL5i-H23U';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Mapeamento de Elementos
+    const subtituloTela = document.getElementById('subtitulo-tela');
+    const camposCadastro = document.getElementById('campos-cadastro');
+    
+    const inputNome = document.getElementById('cadastro-nome');
+    const inputTelefone = document.getElementById('cadastro-telefone');
+    const inputEmail = document.getElementById('auth-email');
+    const inputPassword = document.getElementById('auth-password');
+    const inputRecuperarEmail = document.getElementById('recuperar-email');
+    const inputNovaSenha = document.getElementById('nova-senha-input');
+    
+    const containerPrincipal = document.getElementById('container-principal');
+    const containerRecuperacao = document.getElementById('container-recuperacao');
+    const containerNovaSenha = document.getElementById('container-nova-senha');
+
+    const btnEntrar = document.getElementById('btn-entrar');
+    const btnConfirmarCadastro = document.getElementById('btn-confirmar-cadastro');
+    const btnAlternar = document.getElementById('btn-alternar');
+    const textoAlternar = document.getElementById('texto-alternar');
+    const btnGoogle = document.getElementById('btn-google');
+    const btnIrRecuperar = document.getElementById('btn-ir-recuperar');
+    const btnVoltarLogin = document.getElementById('btn-voltar-login');
+    const btnEnviarLink = document.getElementById('btn-enviar-link');
+    const btnSalvarNovaSenha = document.getElementById('btn-salvar-nova-senha');
+    const msgBox = document.getElementById('mensagem');
+
+    let modoCadastro = false;
+
+    // Alertas
+    function exibirMensagem(texto, erro = false) {
+      msgBox.textContent = texto;
+      msgBox.className = `mb-4 p-3 rounded-xl text-xs font-semibold text-center transition-all ${
+        erro ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+      }`;
+      msgBox.classList.remove('hidden');
+    }
+
+    // Validação Visual
+    function validarCampo(input) {
+      if (!input.value || input.value.trim() === '') {
+        input.classList.remove('border-slate-200');
+        input.classList.add('border-red-400', 'bg-red-50/50', 'shake');
+        setTimeout(() => input.classList.remove('shake'), 400);
+        return false;
+      } else {
+        input.classList.remove('border-red-400', 'bg-red-50/50');
+        input.classList.add('border-slate-200');
+        return true;
+      }
+    }
+
+    [inputNome, inputTelefone, inputEmail, inputPassword, inputRecuperarEmail, inputNovaSenha].forEach(input => {
+      input.addEventListener('input', () => {
+        if (input.value && input.value.trim() !== '') {
+          input.classList.remove('border-red-400', 'bg-red-50/50');
+          input.classList.add('border-slate-200');
+        }
+      });
+    });
+
+    // Máscara Telefone
+    inputTelefone.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 10) {
+        v = v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+      } else if (v.length > 6) {
+        v = v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/, '($1) $2-$3');
+      } else if (v.length > 2) {
+        v = v.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+      } else if (v.length > 0) {
+        v = v.replace(/^(\d*)$/, '($1');
+      }
+      e.target.value = v;
+    });
+
+    // Toggle de Senha no Login
+    const btnTogglePassword = document.getElementById('btn-toggle-password');
+    const eyePath = document.getElementById('eye-path');
+    const eyeBody = document.getElementById('eye-body');
+    btnTogglePassword.addEventListener('click', () => {
+      const tipo = inputPassword.getAttribute('type');
+      if (tipo === 'password') {
+        inputPassword.setAttribute('type', 'text');
+        eyePath.setAttribute('d', 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18');
+        eyeBody.setAttribute('d', '');
+      } else {
+        inputPassword.setAttribute('type', 'password');
+        eyePath.setAttribute('d', 'M15 12a3 3 0 11-6 0 3 3 0 016 0z');
+        eyeBody.setAttribute('d', 'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z');
+      }
+    });
+
+    // Toggle de Senha no Formulário de Nova Senha
+    const btnToggleNovaSenha = document.getElementById('btn-toggle-nova-senha');
+    const eyePathNova = document.getElementById('eye-path-nova');
+    const eyeBodyNova = document.getElementById('eye-body-nova');
+    btnToggleNovaSenha.addEventListener('click', () => {
+      const tipo = inputNovaSenha.getAttribute('type');
+      if (tipo === 'password') {
+        inputNovaSenha.setAttribute('type', 'text');
+        eyePathNova.setAttribute('d', 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18');
+        eyeBodyNova.setAttribute('d', '');
+      } else {
+        inputNovaSenha.setAttribute('type', 'password');
+        eyePathNova.setAttribute('d', 'M15 12a3 3 0 11-6 0 3 3 0 016 0z');
+        eyeBodyNova.setAttribute('d', 'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z');
+      }
+    });
+
+    // Alternar Telas
+    btnAlternar.addEventListener('click', () => {
+      modoCadastro = !modoCadastro;
+      msgBox.classList.add('hidden');
+      [inputNome, inputTelefone, inputEmail, inputPassword].forEach(el => el.classList.remove('border-red-400', 'bg-red-50/50'));
+
+      if (modoCadastro) {
+        subtituloTela.textContent = "Preencha seus dados para criar sua conta";
+        camposCadastro.classList.remove('hidden');
+        btnEntrar.classList.add('hidden');
+        btnConfirmarCadastro.classList.remove('hidden');
+        textoAlternar.textContent = "Já possui uma conta?";
+        btnAlternar.textContent = "Fazer Login";
+      } else {
+        subtituloTela.textContent = "Faça login para agendar sua produção";
+        camposCadastro.classList.add('hidden');
+        btnEntrar.classList.remove('hidden');
+        btnConfirmarCadastro.classList.add('hidden');
+        textoAlternar.textContent = "Não tem uma conta?";
+        btnAlternar.textContent = "Cadastre-se";
+      }
+    });
+
+    btnIrRecuperar.addEventListener('click', () => {
+      msgBox.classList.add('hidden');
+      subtituloTela.textContent = "Recupere seu Acesso";
+      containerPrincipal.classList.add('hidden');
+      containerRecuperacao.classList.remove('hidden');
+    });
+
+    btnVoltarLogin.addEventListener('click', () => {
+      msgBox.classList.add('hidden');
+      subtituloTela.textContent = "Faça login para agendar sua produção";
+      containerRecuperacao.classList.add('hidden');
+      containerPrincipal.classList.remove('hidden');
+    });
+
+    // =====================================================================
+    // SISTEMA DE RATE LIMITING (BLOQUEIO POR TENTATIVAS REPETIDAS)
+    // =====================================================================
+    const MAX_TENTATIVAS = 5;
+    const TEMPO_BLOQUEIO_SEGUNDOS = 120; // 2 minutos
+
+    function verificarBloqueioLogin() {
+      const bloqueadoAte = localStorage.getItem('bf_bloqueio_ate');
+      if (bloqueadoAte) {
+        const restante = Math.ceil((parseInt(bloqueadoAte) - Date.now()) / 1000);
+        if (restante > 0) {
+          btnEntrar.disabled = true;
+          exibirMensagem(`Muitas tentativas incorretas. Tente novamente em ${restante}s.`, true);
+          setTimeout(verificarBloqueioLogin, 1000);
+          return true;
+        } else {
+          localStorage.removeItem('bf_bloqueio_ate');
+          localStorage.removeItem('bf_tentativas_falhas');
+          btnEntrar.disabled = false;
+          msgBox.classList.add('hidden');
+        }
+      }
+      return false;
+    }
+
+    function registrarTentativaFalha() {
+      let tentativas = parseInt(localStorage.getItem('bf_tentativas_falhas') || '0') + 1;
+      localStorage.setItem('bf_tentativas_falhas', tentativas.toString());
+
+      if (tentativas >= MAX_TENTATIVAS) {
+        const tempoFim = Date.now() + (TEMPO_BLOQUEIO_SEGUNDOS * 1000);
+        localStorage.setItem('bf_bloqueio_ate', tempoFim.toString());
+        verificarBloqueioLogin();
+      } else {
+        const restantes = MAX_TENTATIVAS - tentativas;
+        exibirMensagem(`E-mail ou senha incorretos. (${restantes} tentativa(s) restante(s))`, true);
+      }
+    }
+
+    function resetarTentativas() {
+      localStorage.removeItem('bf_tentativas_falhas');
+      localStorage.removeItem('bf_bloqueio_ate');
+    }
+
+    verificarBloqueioLogin();
+
+    // 1. LOGIN
+    btnEntrar.addEventListener('click', async () => {
+      if (verificarBloqueioLogin()) return;
+      msgBox.classList.add('hidden');
+
+      const valEmail = validarCampo(inputEmail);
+      const valSenha = validarCampo(inputPassword);
+
+      if (!valEmail || !valSenha) {
+        exibirMensagem('Preencha os campos obrigatórios!.', true);
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: inputEmail.value.trim(),
+        password: inputPassword.value
+      });
+
+      if (error) {
+        registrarTentativaFalha();
+      } else {
+        resetarTentativas();
+        exibirMensagem('Acesso autorizado! Redirecionando...');
+        setTimeout(() => { window.location.href = 'painel.html'; }, 1000);
+      }
+    });
+
+    // 2. CADASTRO
+    btnConfirmarCadastro.addEventListener('click', async () => {
+      msgBox.classList.add('hidden');
+      
+      const valNome = validarCampo(inputNome);
+      const valTel = validarCampo(inputTelefone);
+      const valEmail = validarCampo(inputEmail);
+      const valSenha = validarCampo(inputPassword);
+
+      if (!valNome || !valTel || !valEmail || !valSenha) {
+        exibirMensagem('Preencha os campos obrigatórios!', true);
+        return;
+      }
+
+      if (inputTelefone.value.trim().length < 14) {
+        inputTelefone.classList.add('border-red-400', 'bg-red-50/50');
+        exibirMensagem('Por favor, digite um celular válido com DDD.', true);
+        return;
+      }
+
+      if (inputPassword.value.length < 6) {
+        inputPassword.classList.add('border-red-400', 'bg-red-50/50');
+        exibirMensagem('Sua senha deve conter no mínimo 6 dígitos.', true);
+        return;
+      }
+
+      btnConfirmarCadastro.disabled = true;
+      btnConfirmarCadastro.textContent = 'Criando conta...';
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: inputEmail.value.trim(),
+        password: inputPassword.value,
+        options: {
+          data: {
+            full_name: inputNome.value.trim(),
+            phone: inputTelefone.value.trim()
+          }
+        }
+      });
+
+      btnConfirmarCadastro.disabled = false;
+      btnConfirmarCadastro.textContent = 'Criar minha conta';
+
+      if (error) {
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          exibirMensagem('Este e-mail já está cadastrado, por favor faça login.', true);
+        } else {
+          exibirMensagem('Erro: ' + error.message, true);
+        }
+      } else {
+        if (data?.user?.identities && data.user.identities.length === 0) {
+          exibirMensagem('Este e-mail já está cadastrado, por favor faça login.', true);
+          return;
+        }
+
+        exibirMensagem('Conta criada com sucesso! Retornando ao Login...');
+        inputNome.value = '';
+        inputTelefone.value = '';
+        inputEmail.value = '';
+        inputPassword.value = '';
+
+        setTimeout(() => { btnAlternar.click(); }, 2000);
+      }
+    });
+
+    // 3. RECUPERAR SENHA
+    btnEnviarLink.addEventListener('click', async () => {
+      msgBox.classList.add('hidden');
+      if (!validarCampo(inputRecuperarEmail)) {
+        exibirMensagem('Por favor, informe o e-mail cadastrado.', true);
+        return;
+      }
+
+      const localUrl = window.location.origin + window.location.pathname;
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(inputRecuperarEmail.value.trim(), {
+        redirectTo: localUrl
+      });
+
+      if (error) {
+        exibirMensagem('Erro: ' + error.message, true);
+      } else {
+        exibirMensagem('Link enviado! Verifique sua caixa de entrada.');
+        inputRecuperarEmail.value = '';
+      }
+    });
+
+    // 4. SALVAR NOVA SENHA
+    btnSalvarNovaSenha.addEventListener('click', async () => {
+      msgBox.classList.add('hidden');
+      if (!validarCampo(inputNovaSenha)) {
+        exibirMensagem('Por favor, digite a nova senha.', true);
+        return;
+      }
+
+      if (inputNovaSenha.value.length < 6) {
+        inputNovaSenha.classList.add('border-red-400', 'bg-red-50/50');
+        exibirMensagem('A nova senha precisa de pelo menos 6 caracteres.', true);
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.updateUser({
+        password: inputNovaSenha.value
+      });
+
+      if (error) {
+        exibirMensagem('Erro ao salvar nova senha: ' + error.message, true);
+      } else {
+        exibirMensagem('Senha redefinida com sucesso! Redirecionando...');
+        setTimeout(() => {
+          window.location.href = window.location.pathname;
+        }, 2200);
+      }
+    });
+
+    // 5. GOOGLE
+    btnGoogle.addEventListener('click', async () => {
+      const pastaAtual = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+      const redirectURL = pastaAtual + '/painel.html';
+
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: redirectURL }
+      });
+
+      if (error) exibirMensagem('Erro com Google: ' + error.message, true);
+    });
+
+    // 6. DETECÇÃO DE RECUPERAÇÃO DE SENHA
+    function verificarSessaoDeRecuperacao() {
+      const hash = window.location.hash;
+      if (hash && (hash.includes('access_token=') || hash.includes('type=recovery'))) {
+        containerPrincipal.classList.add('hidden');
+        containerRecuperacao.classList.add('hidden');
+        containerNovaSenha.classList.remove('hidden');
+        subtituloTela.textContent = "Defina sua Nova Senha";
+        exibirMensagem('Link validado! Digite sua nova senha abaixo.');
+      }
+    }
+
+    verificarSessaoDeRecuperacao();
+  </script>
+</body>
+</html>
