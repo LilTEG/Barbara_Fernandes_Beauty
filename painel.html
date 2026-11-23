@@ -186,7 +186,7 @@
       <!-- Box de Pagamento Pix / Confirmação Recente -->
       <div id="card-pix-pos-agendamento" class="hidden bg-emerald-50 border border-emerald-200 p-5 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
-          <h4 class="text-sm font-bold text-emerald-900">Horário Pré-Reservado! Falta apenas o Sinal de 30%</h4>
+          <h4 class="text-sm font-bold text-emerald-900">Horário Pré-Reservado!</h4>
           <button type="button" onclick="document.getElementById('card-pix-pos-agendamento').classList.add('hidden')" class="text-xs text-emerald-700 font-bold font-sans">✕</button>
         </div>
         <p class="text-xs text-emerald-800 leading-relaxed">
@@ -1009,7 +1009,7 @@
           });
 
         btnConfirmarAgendamento.disabled = false;
-        btnConfirmarAgendamento.textContent = 'Confirmar e Garantir Horário ✨';
+        btnConfirmarAgendamento.textContent = 'Confirmar e Garantir Horário';
 
         if (error) {
           if (error.message.includes('overlapping') || error.code === '23P01') {
@@ -1027,13 +1027,13 @@
 
         // Mensagem de WhatsApp idêntica ao modelo solicitado, com quebras de linha limpas
         const msgWhatsApp = encodeURIComponent(
-          `Olá Bárbara! ✨ Acabei de fazer um agendamento no site:\n\n` +
-          `👤 *Cliente:* ${nomeClienteLogado}\n` +
-          `💄 *Procedimento:* ${resumoNomes}${querCilios ? ' (+ Cílios)' : ''}\n` +
-          `📅 *Data:* ${dataFormatada} das ${horaIniStr} às ${horaFimStr}\n` +
-          `💰 *Valor Total:* ${formatarDinheiro(precoFinal)}\n` +
-          `💳 *Sinal de ${percentualSinal}%:* ${formatarDinheiro(valorSinal)}\n\n` +
-          `Segue o comprovante de pagamento do sinal para confirmar definitivamente meu horário!`
+          `Olá Bárbara! Acabei de fazer um agendamento no site:\n\n` +
+          ` *Cliente:* ${nomeClienteLogado}\n` +
+          ` *Procedimento:* ${resumoNomes}${querCilios ? ' (+ Cílios)' : ''}\n` +
+          ` *Data:* ${dataFormatada} das ${horaIniStr} às ${horaFimStr}\n` +
+          ` *Valor Total:* ${formatarDinheiro(precoFinal)}\n` +
+          ` *Sinal de ${percentualSinal}%:* ${formatarDinheiro(valorSinal)}\n\n` +
+          ` *Observações:* ${inputObservacoes.value.trim() || 'Nenhuma'}\n\n`
         );
 
         pixValorSinal.textContent = formatarDinheiro(valorSinal);
@@ -1353,7 +1353,7 @@
             badgeFinanceiro = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] uppercase">⏳ Sinal Pendente</span>`;
             botaoConfirmarPagamento = `
               <button type="button" data-id="${ag.id}" class="btn-adm-confirmar-sinal bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl transition cursor-pointer">
-                💰 Confirmar Sinal
+                Confirmar Sinal
               </button>
             `;
           } else if (ag.status === 'confirmado') {
