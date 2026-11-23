@@ -229,7 +229,7 @@
       <!-- Configuração de Expediente, Pix e WhatsApp -->
       <div class="bg-white p-5 md:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <h4 class="text-sm font-bold text-[#4A3B32] uppercase tracking-wider flex items-center gap-2">
-          <span>Horário de Funcionamento e Recebimento (Sinal 30%)</span>
+          <span>⏰</span> Horário de Funcionamento e Recebimento (Sinal 30%)
         </h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div>
@@ -247,6 +247,14 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sua Chave Pix (Sinal 30%)</label>
             <input type="text" id="adm-cfg-pix" placeholder="CNPJ, Celular ou E-mail" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">CallMeBot API Key</label>
+            <input type="text" id="adm-cfg-callmebot-key" placeholder="Ex: 5913768" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">CallMeBot Celular (DDI + DDD + Número)</label>
+            <input type="text" id="adm-cfg-callmebot-phone" placeholder="Ex: 5511973482127" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white">
           </div>
         </div>
         <button id="btn-salvar-config" type="button" class="bg-[#C2957E] hover:bg-[#B0826B] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition cursor-pointer">
@@ -432,6 +440,8 @@
     const admCfgFechamento = document.getElementById('adm-cfg-fechamento');
     const admCfgWpp = document.getElementById('adm-cfg-wpp');
     const admCfgPix = document.getElementById('adm-cfg-pix');
+    const admCfgCallmebotKey = document.getElementById('adm-cfg-callmebot-key');
+    const admCfgCallmebotPhone = document.getElementById('adm-cfg-callmebot-phone');
     const btnSalvarConfig = document.getElementById('btn-salvar-config');
     const admDataBloqueio = document.getElementById('adm-data-bloqueio');
     const admMotivoBloqueio = document.getElementById('adm-motivo-bloqueio');
@@ -540,6 +550,8 @@
         admCfgFechamento.value = horaFechamento;
         admCfgWpp.value = whatsappSalao;
         admCfgPix.value = chavePixSalao;
+        if (admCfgCallmebotKey) admCfgCallmebotKey.value = data.callmebot_apikey || '';
+        if (admCfgCallmebotPhone) admCfgCallmebotPhone.value = data.callmebot_phone || '';
       } catch (e) {
         console.warn('Usando configurações padrão:', e);
       }
@@ -579,7 +591,7 @@
 
         nomeClienteLogado = nomeExibicao;
         telefoneClienteLogado = telefone;
-        msgBoasVindas.textContent = `Olá, ${nomeExibicao}! 💖`;
+        msgBoasVindas.textContent = `Olá, ${nomeExibicao}! ✨`;
 
         if (!telefone || telefone.trim() === '') {
           cardTelefonePendente.classList.remove('hidden');
@@ -611,16 +623,16 @@
         if (error) throw error;
 
         listaServicos = data || [];
-        const categorias = {};
+        const copyCategorias = {};
         listaServicos.forEach(s => {
           const cat = s.categoria || 'Maquiagem';
-          if (!categorias[cat]) categorias[cat] = [];
-          categorias[cat].push(s);
+          if (!copyCategorias[cat]) copyCategorias[cat] = [];
+          copyCategorias[cat].push(s);
         });
 
         containerSessoesServicos.innerHTML = '';
 
-        Object.keys(categorias).forEach((nomeCategoria, index) => {
+        Object.keys(copyCategorias).forEach((nomeCategoria, index) => {
           const secao = document.createElement('div');
           secao.className = 'space-y-3 bg-white/50 p-4 rounded-3xl border border-[#EAD5C3]/40';
           
@@ -653,7 +665,7 @@
             seta.textContent = oculto ? '▲' : '▼';
           });
 
-          categorias[nomeCategoria].forEach(servico => {
+          copyCategorias[nomeCategoria].forEach(servico => {
             const card = document.createElement('div');
             card.id = `card-servico-${servico.id}`;
             card.className = 'card-servico cursor-pointer rounded-2xl overflow-hidden border-2 border-slate-100 bg-white hover:border-[#EAD5C3] transition-all duration-200 flex flex-col justify-between shadow-sm';
@@ -755,7 +767,7 @@
       });
 
       ['Maquiagem', 'Sobrancelhas'].forEach(cat => {
-        const subStatus = document.getElementById(`sub-status-${cat.replace(/\s+/g, '')}`);
+        const subStatus = document.getElementById(`sub-status-${cat.replace(/\\s+/g, '')}`);
         if (subStatus) {
           subStatus.innerHTML = selecoesPorCategoria[cat]
             ? `<span class="text-[#C2957E] font-bold">✓ ${selecoesPorCategoria[cat].nome} selecionado</span>`
@@ -1009,7 +1021,7 @@
           });
 
         btnConfirmarAgendamento.disabled = false;
-        btnConfirmarAgendamento.textContent = 'Confirmar e Garantir Horário';
+        btnConfirmarAgendamento.textContent = 'Confirmar e Garantir Horário ✨';
 
         if (error) {
           if (error.message.includes('overlapping') || error.code === '23P01') {
@@ -1025,15 +1037,14 @@
         const horaIniStr = dataHoraInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const horaFimStr = dataHoraFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-        // Mensagem de WhatsApp idêntica ao modelo solicitado, com quebras de linha limpas
         const msgWhatsApp = encodeURIComponent(
-          `Olá Bárbara! Acabei de fazer um agendamento no site:\n\n` +
-          ` *Cliente:* ${nomeClienteLogado}\n` +
-          ` *Procedimento:* ${resumoNomes}${querCilios ? ' (+ Cílios)' : ''}\n` +
-          ` *Data:* ${dataFormatada} das ${horaIniStr} às ${horaFimStr}\n` +
-          ` *Valor Total:* ${formatarDinheiro(precoFinal)}\n` +
-          ` *Sinal de ${percentualSinal}%:* ${formatarDinheiro(valorSinal)}\n\n` +
-          ` *Observações:* ${inputObservacoes.value.trim() || 'Nenhuma'}\n\n`
+          `Olá Bárbara! ✨ Acabei de fazer um agendamento no site:\n\n` +
+          `👤 *Cliente:* ${nomeClienteLogado}\n` +
+          `💄 *Procedimento:* ${resumoNomes}${querCilios ? ' (+ Cílios)' : ''}\n` +
+          `📅 *Data:* ${dataFormatada} das ${horaIniStr} às ${horaFimStr}\n` +
+          `💰 *Valor Total:* ${formatarDinheiro(precoFinal)}\n` +
+          `💳 *Sinal de ${percentualSinal}%:* ${formatarDinheiro(valorSinal)}\n\n` +
+          `Segue o comprovante de pagamento do sinal para confirmar definitivamente meu horário!`
         );
 
         pixValorSinal.textContent = formatarDinheiro(valorSinal);
@@ -1055,6 +1066,7 @@
         exibirFeedback('Horário pré-reservado! Por favor, realize o Pix de sinal de 30% abaixo e envie no WhatsApp.');
       } catch (err) {
         btnConfirmarAgendamento.disabled = false;
+        btnConfirmarAgendamento.textContent = 'Confirmar e Garantir Horário ✨';
         exibirFeedback('Erro inesperado: ' + err.message, true);
       }
     });
@@ -1101,7 +1113,7 @@
           if (ag.status === 'cancelado') {
             badgeStatus = `<span class="px-2.5 py-0.5 bg-red-100 text-red-700 font-bold rounded-full text-[10px] uppercase">Cancelado</span>`;
           } else if (ag.status === 'pendente_sinal') {
-            badgeStatus = `<span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] uppercase">⏳ Aguardando Sinal de 30%</span>`;
+            badgeStatus = `<span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px] uppercase">⏳ Aguardando Comprovante</span>`;
           } else if (ag.status === 'confirmado') {
             badgeStatus = `<span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] uppercase">✅ Confirmado</span>`;
           }
@@ -1126,7 +1138,7 @@
             <div class="flex items-center gap-2">
               ${ag.status !== 'cancelado' ? `
                 <a href="https://wa.me/${whatsappSalao}?text=${msgWppItem}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl transition">
-                  📲 Mandar Comprovante
+                  Mandando Comprovante 📲
                 </a>
                 <button type="button" data-id="${ag.id}" data-resumo="${ag.resumo_servicos} (${dataFormatada} às ${horaIni})" class="btn-abrir-modal-cancelar bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-xl transition cursor-pointer">
                   Cancelar
@@ -1205,7 +1217,9 @@
             hora_abertura: abertura,
             hora_fechamento: fechamento,
             whatsapp_salao: admCfgWpp.value.replace(/\D/g, ''),
-            chave_pix: admCfgPix.value.trim()
+            chave_pix: admCfgPix.value.trim(),
+            callmebot_apikey: admCfgCallmebotKey.value.trim(),
+            callmebot_phone: admCfgCallmebotPhone.value.trim()
           })
           .eq('id', 1);
 
