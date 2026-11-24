@@ -1391,6 +1391,7 @@
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               ${botaoConfirmarPagamento}
+              ${numLimpoWpp && ag.status === 'confirmado' ? `<button type="button" data-id="${ag.id}" class="btn-adm-lembrete-24h bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-bold px-3 py-2 rounded-xl transition cursor-pointer">Lembrete 24h 🔔</button>` : ''}
               ${numLimpoWpp ? `<a href="https://wa.me/55${numLimpoWpp}" target="_blank" class="bg-[#FAF6F0] hover:bg-[#EAD5C3]/30 border border-[#EAD5C3] text-[#4A3B32] font-bold px-3 py-2 rounded-xl transition">📲 Conversar</a>` : ''}
               ${ag.status !== 'cancelado' ? `<button type="button" data-id="${ag.id}" class="btn-adm-cancelar bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-2 rounded-xl transition cursor-pointer">Cancelar</button>` : ''}
             </div>
@@ -1402,6 +1403,9 @@
         document.querySelectorAll('.btn-adm-confirmar-sinal').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             const idAg = e.currentTarget.getAttribute('data-id');
+            const agObj = agendamentos.find(a => a.id === idAg);
+            const clientObj = mapaPerfis[agObj.cliente_id] || {};
+
             const { error } = await supabaseClient
               .from('agendamentos')
               .update({ status: 'confirmado' })
@@ -1410,8 +1414,55 @@
             if (error) {
               exibirFeedback('Erro ao confirmar sinal: ' + error.message, true);
             } else {
-              exibirFeedback('Pagamento do sinal confirmado! O agendamento está ativo e a cliente já pode ver.');
+              exibirFeedback('Pagamento do sinal confirmado! Abrindo WhatsApp para enviar a confirmação para a cliente...');
+              
+              const dtIni = new Date(agObj.data_hora_inicio);
+              const dataStr = dtIni.toLocaleDateString('pt-BR');
+              const horaIniStr = dtIni.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              const valorSinal = agObj.valor_sinal || (agObj.valor_total * 0.3);
+              const numDest = (clientObj.phone || '').replace(/\D/g, '');
+
+              // Mensagem de confirmação pré-preenchida
+              const msgConfirmacao = encodeURIComponent(
+                `Oi ${clientObj.full_name || 'Cliente'}! 💖\n\n` +
+                `Confirmado o recebimento do seu sinal de ${formatarDinheiro(valorSinal)}! ` +
+                `Seu agendamento para *${agObj.resumo_servicos}* no dia *${dataStr} às ${horaIniStr}* está 100% garantido! ` +
+                `Te espero aqui no estúdio! 💖`
+              );
+
+              if (numDest) {
+                window.open(`https://wa.me/55${numDest}?text=${msgConfirmacao}`, '_blank');
+              }
+
               await listarTodosAgendamentosAdmin();
+            }
+          });
+        });
+
+        // Configurar Evento para Lembrete 24h Manual
+        document.querySelectorAll('.btn-adm-lembrete-24h').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idAg = e.currentTarget.getAttribute('data-id');
+            const agObj = agendamentos.find(a => a.id === idAg);
+            const clientObj = mapaPerfis[agObj.cliente_id] || {};
+
+            const dtIni = new Date(agObj.data_hora_inicio);
+            const dtFim = new Date(agObj.data_hora_fim);
+            const dataStr = dtIni.toLocaleDateString('pt-BR');
+            const horaIniStr = dtIni.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const horaFimStr = dtFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const valorSinal = agObj.valor_sinal || (agObj.valor_total * 0.3);
+            const numDest = (clientObj.phone || '').replace(/\D/g, '');
+
+            const msgLembrete = encodeURIComponent(
+              `Olá ${clientObj.full_name || 'Cliente'}!💖\n\n` +
+              `Passando para lembrar do seu atendimento amanhã 📅 (*${dataStr}*) das *${horaIniStr} às ${horaFimStr}* na *Bárbara Fernandes Beauty*.\n\n` +
+              `*Sinal:* ${formatarDinheiro(valorSinal)} (Pago)\n` +
+              `Te espero aqui no estúdio! 💖`
+            );
+
+            if (numDest) {
+              window.open(`https://wa.me/55${numDest}?text=${msgLembrete}`, '_blank');
             }
           });
         });
